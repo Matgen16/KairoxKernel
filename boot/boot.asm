@@ -18,10 +18,14 @@ stack_bottom:
     resb 16384 ; 16 KB stack
 stack_top:
 
+align 4
+multiboot_ptr: resd 1 ; physical address of the Multiboot info struct
+
 section .text
 global _start
 _start:
     cli
+    mov [multiboot_ptr], ebx ; GRUB leaves the Multiboot info ptr in ebx
     mov esp, stack_top
     call setup_page_tables
     jmp enter_long_mode
@@ -100,6 +104,7 @@ long_mode_start:
 
     mov rsp, stack_top
 
+    mov edi, [multiboot_ptr] ; 32-bit mov zero-extends into rdi (arg 1, SysV ABI)
     call kernel_main
 
 .hang:
